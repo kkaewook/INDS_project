@@ -26,9 +26,9 @@ class man{
 private:
     int gender;
     int nodenum; // 이름 -> int로 저장했다가 인덱싱으로 이름 찾기
-    vector<pair<man*,int>> addr; //연결되어있는 노드의 주소 및 관계 값
     string name;
 public:
+    vector<pair<man*,int>> addr; //연결되어있는 노드의 주소 및 관계 값
     man(string name,int sex);
     void insertMan(pair<man*,int> addr_and_rel){
         addr.push_back(addr_and_rel);
@@ -52,6 +52,7 @@ man::man(string _name,int sex){
     name = _name;
 }
 class Graph{
+private:
     vector<man> family;
 public:
     Graph();    //사용자(자신) 추가
@@ -59,7 +60,7 @@ public:
     void updateMember();
     void findMember();
     void sql_Member();
-    void find(int nodenum);
+    int find(int nodenum, queue<int>que, int* visited);
 };
 Graph::Graph(){
     Connection con(true);
@@ -133,7 +134,6 @@ void Graph::sql_Member(){
     }catch(Exception &e){
         cout<< e.what()<<endl;
     }
-    
     Query query = con.query();
     query <<"select * from member";
     StoreQueryResult res = query.store();
@@ -142,15 +142,36 @@ void Graph::sql_Member(){
 }
 void Graph::updateMember(){
 }
-void Graph::find(int nodenum){
-    queue<int> que;
-    que.push(family.begin()->getNodeno());
+//============================
+
+//=============================
+
+int Graph::find(int nodenum,queue<int>que,int* visited){
+    //nodenum : 찾아야할 노드번호
+    int _count = 0;
     
     while(true){
-        if(que.front() == nodenum)
-            return;
+        if(que.size() == 0)
+            return 0;
         
+        int cur_node = que.front();
+        que.pop();
         
+        if(cur_node == nodenum) //노드를 찾음
+            return _count+1;
+        if(visited[cur_node-1] == 1)    //이미 방문한 노드
+            continue;
+        else
+            visited[cur_node-1] = 1;    //방문 표시
+        
+        if(family[cur_node-1].addr.size()==0)
+            return 0;
+        else{
+            _count++;
+            for(int i = 0; i<family[cur_node-1].addr.size(); i++){
+                que.push(get<1>(family[cur_node-1].addr[i]));
+            }
+        }
     }
 }
 void Graph::findMember(){
@@ -159,14 +180,31 @@ void Graph::findMember(){
     cout<<"input member name to find : ";
     cin>>input_name;
     
+    int me = family.begin()->getNodeno();
+    
     for(vector<man>::iterator iter = family.begin(); iter != family.end(); iter++){
         string temp = iter->getName();
         if(temp == input_name){
-            find(iter->getNodeno());
+            int size = (int)family.size()+1;
+            int nodenum = iter->getNodeno();
+            
+            queue<int> que;
+            int* visited = new int[size];
+            
+            for(int i = 0; i<size+1;i++){
+                visited[i] = 0;
+            }
+            //노드번호 인덱스1부터시작, visited배열은 0부터 시작
+            //큐와 방문배열에 첫번째 원소(나)의 정보 넣기
+            visited[me-1] = 1;
+            que.push(me);
+            cout<<find(nodenum, que, visited)<<"촌 관계입니다."<<endl;
+            
         }
-        
     }
 }
+//================================
+
 int main(int argc, const char * argv[]){
     
     Graph* Grp = new Graph;
