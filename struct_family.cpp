@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <queue>
 #include <cstdio>
 #include <tuple>
 #include "mysql.h"
@@ -23,7 +24,7 @@ int _index = 0; //전체 멤버의 인덱스(추가시 1증가)
 
 class man{
 private:
-    bool gender;
+    int gender;
     int nodenum; // 이름 -> int로 저장했다가 인덱싱으로 이름 찾기
     vector<pair<man*,int>> addr; //연결되어있는 노드의 주소 및 관계 값
     string name;
@@ -32,9 +33,10 @@ public:
     void insertMan(pair<man*,int> addr_and_rel){
         addr.push_back(addr_and_rel);
     };
-    bool getGender(){return gender;};
+    int getGender(){return gender;};
     int getNodeno(){return nodenum;};
     man* getmyAddr(){return this;};
+    string getName(){return name;};
     pair<man*,int> getLastMember();
 };
 pair<man*,int> man::getLastMember(){
@@ -57,6 +59,7 @@ public:
     void updateMember();
     void findMember();
     void sql_Member();
+    void find(int nodenum);
 };
 Graph::Graph(){
     Connection con(true);
@@ -139,16 +142,35 @@ void Graph::sql_Member(){
 }
 void Graph::updateMember(){
 }
+void Graph::find(int nodenum){
+    queue<int> que;
+    que.push(family.begin()->getNodeno());
+    
+    while(true){
+        if(que.front() == nodenum)
+            return;
+        
+        
+    }
+}
 void Graph::findMember(){
+    
     string input_name;
-    cout<<"input member name : ";
+    cout<<"input member name to find : ";
     cin>>input_name;
     
-    
+    for(vector<man>::iterator iter = family.begin(); iter != family.end(); iter++){
+        string temp = iter->getName();
+        if(temp == input_name){
+            find(iter->getNodeno());
+        }
+        
+    }
 }
 int main(int argc, const char * argv[]){
     
     Graph* Grp = new Graph;
+    
     //=================
     //=====DB TEST=====
     
